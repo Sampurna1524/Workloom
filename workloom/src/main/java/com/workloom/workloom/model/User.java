@@ -20,28 +20,28 @@ public class User {
     @Column(nullable = false)
     private String fullName;
 
-    // ROLE: SEEKER or GIVER
+    // ROLE: JOB_SEEKER or COMPANY
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String role;
+    private UserRole role;
 
-    private String headline;            // Professional title/headline (e.g. "Senior Java Developer")
-    
+    private String headline;
+
     @Column(length = 5000)
-    private String summary;             // About/summary section
-    
-    private String profilePhotoUrl;    // URL to profile picture
-    
-    private String linkedinUrl;        // LinkedIn profile URL (optional)
+    private String summary;
+
+    private String profilePhotoUrl;
+    private String linkedinUrl;
 
     @Column(length = 1000)
-    private String resumeLink;         // URL link to resume (optional)
+    private String resumeLink;
 
-    private String resumeUrl;          // URL for uploaded resume PDF (optional)
+    private String resumeUrl;
+    private String skills;
 
-    // For simplicity, skills as comma-separated string for now 
-    private String skills;             // e.g. "Java,Spring,SQL"
-
-    // Relationships: One user has many experiences, educations, certifications etc.
+    // Only for company users
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private CompanyProfile companyProfile;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Experience> experiences;
@@ -72,8 +72,8 @@ public class User {
     public String getFullName() { return fullName; }
     public void setFullName(String fullName) { this.fullName = fullName; }
 
-    public String getRole() { return role; }
-    public void setRole(String role) { this.role = role; }
+    public UserRole getRole() { return role; }
+    public void setRole(UserRole role) { this.role = role; }
 
     public String getHeadline() { return headline; }
     public void setHeadline(String headline) { this.headline = headline; }
@@ -95,6 +95,14 @@ public class User {
 
     public String getSkills() { return skills; }
     public void setSkills(String skills) { this.skills = skills; }
+
+    public CompanyProfile getCompanyProfile() { return companyProfile; }
+    public void setCompanyProfile(CompanyProfile companyProfile) {
+        this.companyProfile = companyProfile;
+        if (companyProfile != null && companyProfile.getUser() != this) {
+            companyProfile.setUser(this);
+        }
+    }
 
     public List<Experience> getExperiences() { return experiences; }
     public void setExperiences(List<Experience> experiences) { this.experiences = experiences; }

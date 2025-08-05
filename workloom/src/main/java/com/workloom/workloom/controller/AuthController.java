@@ -4,6 +4,7 @@ import com.workloom.workloom.dto.AuthResponse;
 import com.workloom.workloom.dto.LoginRequest;
 import com.workloom.workloom.dto.RegisterRequest;
 import com.workloom.workloom.model.User;
+import com.workloom.workloom.model.UserRole;
 import com.workloom.workloom.repository.UserRepository;
 import com.workloom.workloom.security.JwtUtil;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,7 @@ public class AuthController {
     public AuthController(UserRepository userRepository, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
         this.jwtUtil = jwtUtil;
-        this.passwordEncoder = new BCryptPasswordEncoder();
+        this.passwordEncoder = new BCryptPasswordEncoder(); // Could replace with bean injection
     }
 
     @PostMapping("/register")
@@ -32,12 +33,16 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Email is already registered.");
         }
 
+        UserRole userRole = request.getRole();
+        if (userRole == null) {
+            return ResponseEntity.badRequest().body("Role must be specified: JOB_SEEKER or COMPANY.");
+        }
+
         User user = new User();
         user.setEmail(request.getEmail());
-        // Hash the password before saving
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setFullName(request.getFullName());
-        user.setRole(request.getRole());
+        user.setRole(userRole);
 
         userRepository.save(user);
 
@@ -53,6 +58,9 @@ public class AuthController {
 
         String token = jwtUtil.generateToken(user.getEmail());
 
-        return ResponseEntity.ok(new AuthResponse(token));
+        // Respond with both token and role for frontend use
+        AuthResponse authResponse = new AuthResponse(token, user.getRole().name());
+
+        return ResponseEntity.ok(authResponse);
     }
 }

@@ -30,6 +30,7 @@ public class SecurityConfig {
                 // Allow unauthenticated access to registration and login endpoints
                 .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
                 .requestMatchers("/api/profile/**").authenticated()
+                
 
                 // Allow unauthenticated access to swagger or other public endpoints if you add any
                 // .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll() // Example
