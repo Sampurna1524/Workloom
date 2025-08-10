@@ -22,38 +22,40 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            // Disable CSRF since tokens are immune to it
             .csrf(csrf -> csrf.disable())
-            
-            // Define authorization rules
-            .authorizeHttpRequests(auth -> auth
-                // Allow unauthenticated access to registration and login endpoints
-                .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
-                .requestMatchers("/api/profile/**").authenticated()
-                
 
-                // Allow unauthenticated access to swagger or other public endpoints if you add any
-                // .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll() // Example
-                
+            .authorizeHttpRequests(auth -> auth
+                // Allow public access to static resources and landing page
+                .requestMatchers(
+                    "/index.html",
+                    "/css/**",
+                    "/js/**",
+                    "/images/**",
+                    "/files/**"
+                ).permitAll()
+
+                // Allow registration and login without authentication
+                .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
+
+                // All profile endpoints require authentication
+                .requestMatchers("/api/profile/**").authenticated()
+
                 // All other endpoints require authentication
                 .anyRequest().authenticated()
             )
-            
-            // Stateless session management since we use JWT
+
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
-            
-            // Disable default form login
+
             .formLogin(form -> form.disable());
-        
-        // Add your JWT token filter before the UsernamePasswordAuthenticationFilter
+
+        // Register JWT filter
         http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // Expose the AuthenticationManager bean (needed for authentication processing)
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
